@@ -5,11 +5,13 @@ Test bandwidth for Multi-Stations of Multi-APs
 @author: chenze
 
 """
+import re
 from mininet.net import Mininet
 from mininet.node import Controller,OVSKernelSwitch
 from mininet.link import TCLink
 from mininet.cli import CLI
 from mininet.log import setLogLevel
+from mininet.log import info, error, debug, output, warn
 import numpy as np
 
 def Topology(n,m):
@@ -54,9 +56,25 @@ def Topology(n,m):
     c1.start()
     for i in range(m):
         APs[i].start( [c1] )
+        
     #测量吞吐量
-    Hosts[0].cmd('iperf -s')
-    STAs[0].cmd('iperf -c 10.0.0.21')
+    output('*** Iperf: testing TCP bandwidth between multi-clients', 'and', Hosts[0], '\n')
+    port = 5001 #端口号
+    seconds = 5 #测量时间
+    bwArgs = '' #带宽信息
+    iperfArgs = 'iperf -p %d ' % port
+    
+    Hosts[0].cmd('killall -9 iperf')
+    Hosts[0].sendCmd(iperfArgs + '-s')
+    cliout0 = STAs[0].cmd(iperfArgs + '-t %d -c ' % seconds + 
+                             Hosts[0].IP() + ' ' + bwArgs)
+    cliout1 = STAs[1].cmd(iperfArgs + '-t %d -c ' % seconds + 
+                             Hosts[0].IP() + ' ' + bwArgs)
+    
+    Hosts[0].sendInt()
+    servout = Hosts[0].waitOutput()
+    output('*** Results: %s\n' % servout)
+    
     print "iperf done"
     #for i in range(n):
     #    net.iperf([STAs[i],Hosts[0]],seconds=10)
@@ -70,6 +88,20 @@ def Topology(n,m):
     print "*** Stopping network"
     net.stop()
 
+def Parse_iperf(iperfOutput):
+    """Parse iperf output and return bandwidth.
+           iperfOutput: string
+           returns: result string"""
+    r = r'([\d\.]+ \w+/sec)'
+    m = re.findall(r, iperfOutput)
+    if m:
+        return m[-1]
+    else:
+        # was: raise Exception(...)
+        error('could not parse iperf output: ' + iperfOutput)
+        return ''
+    
+    
 def Rand_Position(n):
     '''
     产生随机坐标值
