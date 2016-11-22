@@ -70,10 +70,14 @@ def Topology(n,m):
                              Hosts[0].IP() + ' ' + bwArgs)
     cliout1 = STAs[1].cmd(iperfArgs + '-t %d -c ' % seconds + 
                              Hosts[0].IP() + ' ' + bwArgs)
-    
+    cliout2 = STAs[2].cmd(iperfArgs + '-t %d -c ' % seconds +
+                             Hosts[0].IP() + ' ' + bwArgs)
+    output('*** Client0 Results:%s\n' %cliout0)
+    output('*** Client1 Results:%s\n' %cliout1)
+    output('*** Client2 Results:%s\n' %cliout2)
     Hosts[0].sendInt()
     servout = Hosts[0].waitOutput()
-    output('*** Results: %s\n' % servout)
+    output('*** Server Results: %s\n' % servout)
     
     print "iperf done"
     #for i in range(n):
