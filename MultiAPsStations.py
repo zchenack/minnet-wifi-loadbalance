@@ -6,6 +6,7 @@ Test bandwidth for Multi-Stations of Multi-APs
 
 """
 import re
+import threading
 from mininet.net import Mininet
 from mininet.node import Controller,OVSKernelSwitch
 from mininet.link import TCLink
@@ -66,15 +67,26 @@ def Topology(n,m):
     
     Hosts[0].cmd('killall -9 iperf')
     Hosts[0].sendCmd(iperfArgs + '-s')
-    cliout0 = STAs[0].cmd(iperfArgs + '-t %d -c ' % seconds + 
-                             Hosts[0].IP() + ' ' + bwArgs)
-    cliout1 = STAs[1].cmd(iperfArgs + '-t %d -c ' % seconds + 
-                             Hosts[0].IP() + ' ' + bwArgs)
-    cliout2 = STAs[2].cmd(iperfArgs + '-t %d -c ' % seconds +
-                             Hosts[0].IP() + ' ' + bwArgs)
-    output('*** Client0 Results:%s\n' %cliout0)
-    output('*** Client1 Results:%s\n' %cliout1)
-    output('*** Client2 Results:%s\n' %cliout2)
+    
+    
+#    cliout0 = STAs[0].cmd(iperfArgs + '-t %d -c ' % seconds + 
+#                             Hosts[0].IP() + ' ' + bwArgs)
+#    cliout1 = STAs[1].cmd(iperfArgs + '-t %d -c ' % seconds + 
+#                             Hosts[0].IP() + ' ' + bwArgs)
+#    cliout2 = STAs[2].cmd(iperfArgs + '-t %d -c ' % seconds +
+#                             Hosts[0].IP() + ' ' + bwArgs)
+#    output('*** Client0 Results:%s\n' %cliout0)
+#    output('*** Client1 Results:%s\n' %cliout1)
+#    output('*** Client2 Results:%s\n' %cliout2)
+    
+    threads = []
+    for i in range(n):
+        t_tmp = threading.Thread(target=STAs[i].cmd,args=(iperfArgs + '-t %d -c ' % seconds +Hosts[0].IP() + ' ' + bwArgs,))
+        threads.append(t_tmp)
+    
+    for t in threads:
+        t.start()
+    t.join()
     Hosts[0].sendInt()
     servout = Hosts[0].waitOutput()
     output('*** Server Results: %s\n' % servout)
