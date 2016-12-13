@@ -65,9 +65,9 @@ def Topology(n,m):
     bwArgs = '' #带宽信息
     iperfArgs = 'iperf -p %d ' % port
     
-    Hosts[0].cmd('killall -9 iperf')
-    Hosts[0].sendCmd(iperfArgs + '-s')
-    
+    for i in range(m):
+        Hosts[i].cmd('killall -9 iperf')
+        Hosts[i].sendCmd(iperfArgs + '-s')
     
 #    cliout0 = STAs[0].cmd(iperfArgs + '-t %d -c ' % seconds + 
 #                             Hosts[0].IP() + ' ' + bwArgs)
@@ -81,12 +81,14 @@ def Topology(n,m):
     
     threads = []
     for i in range(n):
-        t_tmp = threading.Thread(target=STAs[i].cmd,args=(iperfArgs + '-t %d -c ' % seconds +Hosts[0].IP() + ' ' + bwArgs,))
+        t_tmp = threading.Thread(target=STAs[i].cmd,args=(iperfArgs + '-t %d -c ' % seconds +STAs[i].params['associatedTo'].IP() + ' ' + bwArgs,))
         threads.append(t_tmp)
     
     for t in threads:
         t.start()
     t.join()
+    
+    
     Hosts[0].sendInt()
     servout = Hosts[0].waitOutput()
     output('*** Server Results: %s\n' % servout)
